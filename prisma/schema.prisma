@@ -10,3 +10,119 @@ datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
 }
+
+enum Role {
+  EMPLOYEE
+  MANAGER
+  ADMIN
+}
+
+enum PTOStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+model User {
+  id       String @id @default(cuid())
+  email    String @unique
+  password String
+  name     String
+  role     Role   @default(EMPLOYEE)
+
+  // Opposite side of EmployeeProfile.user
+  employee EmployeeProfile?
+
+  // ✅ Added: opposite side of EmployeeProfile.manager (named relation)
+  managesEmployees EmployeeProfile[] @relation("ManagerEmployees")
+
+  // ✅ Added: opposite side of Team.manager
+  managesTeams Team[]
+
+  // ✅ Added: opposite side of PTORequest.approver
+  approvals PTORequest[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model EmployeeProfile {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+
+  title      String?
+  department String?
+  startDate  DateTime?
+
+  managerId String?
+  // Named relation because there are two relations between EmployeeProfile and User
+  manager   User?   @relation("ManagerEmployees", fields: [managerId], references: [id])
+
+  teamId String?
+  team   Team?   @relation(fields: [teamId], references: [id])
+
+  balances PTOBalance[]
+  requests PTORequest[]
+}
+
+model Team {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  description String?
+
+  managerId String?
+  // Opposite side is User.managesTeams
+  manager   User?   @relation(fields: [managerId], references: [id])
+
+  members EmployeeProfile[]
+}
+
+model PTOPolicy {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  accrualHrsMo Float
+  carryoverMax Float
+  effectiveOn  DateTime
+
+  // ✅ Added: opposite side of PTOBalance.policy
+  balances PTOBalance[]
+}
+
+model PTOBalance {
+  id         String          @id @default(cuid())
+  employeeId String
+  employee   EmployeeProfile @relation(fields: [employeeId], references: [id])
+
+  year Int
+
+  policyId String
+  policy   PTOPolicy @relation(fields: [policyId], references: [id])
+
+  accrued   Float @default(0)
+  used      Float @default(0)
+  carryover Float @default(0)
+
+  @@unique([employeeId, year])
+}
+
+model PTORequest {
+  id         String          @id @default(cuid())
+  employeeId String
+  employee   EmployeeProfile @relation(fields: [employeeId], references: [id])
+
+  startDate DateTime
+  endDate   DateTime
+  hours     Float
+  status    PTOStatus @default(DRAFT)
+
+  approverId String?
+  // Opposite side is User.approvals
+  approver   User?   @relation(fields: [approverId], references: [id])
+
+  note      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
