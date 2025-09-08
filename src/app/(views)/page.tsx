@@ -30,8 +30,8 @@ export default function Home() {
 
         // Fetch roles and users in parallel
         const [rolesResponse, usersResponse] = await Promise.all([
-          fetch("/api/roles"),
-          fetch("/api/users"),
+          fetch("/api/roles-data"),
+          fetch("/api/users-data"),
         ]);
 
         const rolesData: ApiResponse<string[]> = await rolesResponse.json();
@@ -81,7 +81,7 @@ export default function Home() {
 
         <div className="w-full max-w-2xl">
           <h2 className="text-xl font-semibold mb-4">
-            Available Roles (GET /api/roles):
+            Available Roles (GET /api/roles-data):
           </h2>
           <ul className="list-disc list-inside space-y-2">
             {roles.map((role) => (
@@ -94,7 +94,7 @@ export default function Home() {
 
         <div className="w-full max-w-2xl">
           <h2 className="text-xl font-semibold mb-4">
-            Users (GET /api/users):
+            Users (GET /api/users-data):
           </h2>
           {users.length === 0 ? (
             <p className="text-gray-600">No users found in database</p>
@@ -127,15 +127,16 @@ export default function Home() {
           </h2>
           <div className="space-y-2 text-sm">
             <div className="border p-2 rounded">
-              <code className="font-mono">GET /api/roles</code> - List all
+              <code className="font-mono">GET /api/roles-data</code> - List all
               available roles
             </div>
             <div className="border p-2 rounded">
-              <code className="font-mono">GET /api/users</code> - List all users
+              <code className="font-mono">GET /api/users-data</code> - List all
+              users
             </div>
             <div className="border p-2 rounded">
-              <code className="font-mono">POST /api/users</code> - Create a new
-              user
+              <code className="font-mono">POST /api/users-data</code> - Create a
+              new user
             </div>
           </div>
         </div>
